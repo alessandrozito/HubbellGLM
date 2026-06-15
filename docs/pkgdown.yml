@@ -1,9 +1,9 @@
-pandoc: '3.2'
+pandoc: 3.9.0.2
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   bci_tutorial: bci_tutorial.html
-last_built: 2026-05-25T22:21Z
+last_built: 2026-06-05T22:09Z
 urls:
   reference: https://alessandrozito.github.io/HubbellGLM/reference
   article: https://alessandrozito.github.io/HubbellGLM/articles

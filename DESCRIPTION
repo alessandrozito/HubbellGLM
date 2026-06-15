@@ -18,7 +18,7 @@ Imports: stats, Rcpp, utils
 LinkingTo: Rcpp, RcppArmadillo
 URL: https://alessandrozito.github.io/HubbellGLM/, https://github.com/alessandrozito/HubbellGLM
 BugReports: https://github.com/alessandrozito/HubbellGLM/issues
-Suggests: quarto, knitr, rmarkdown
+Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 Depends: 
     R (>= 4.0)

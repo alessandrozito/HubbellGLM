@@ -10,12 +10,17 @@ any sample size.
 
 ## Installation
 
-Install the development version from GitHub:
+The package is compiled from source on install, so you need a C/C++ toolchain
+(macOS: Xcode Command Line Tools; Windows: Rtools; Linux: `r-base-dev`) and the
+`RcppArmadillo` package:
 
 ```r
-# install.packages("devtools")
-devtools::install_github("alessandrozito/HubbellGLM")
+install.packages(c("Rcpp", "RcppArmadillo", "remotes"))
+remotes::install_github("DNAdiversity/HubbellGLM")
 ```
+
+See [`Running_the_package.md`](Running_the_package.md) for per-OS prerequisites
+and steps to verify the install.
 
 ## Quick start
 
@@ -77,4 +82,4 @@ coeftest(fit, vcov. = vcov_fit)
 
 ## Reference
 
-Zito, A., Rigon, T., Roslin, T., Niittynen, P., Hebert, P. D. N., Zakharov, E. V., Ratnasingham, S., iBOL Consortium, Ovaskainen, O., and Dunson, D. B. (2026). *Predicting global biodiversity via Hubbell regression*. bioArxiv.
+Zito, A., Rigon, T., Roslin, T., Niittynen, P., Hebert, P. D. N., Zakharov, E. V., Ratnasingham, S., iBOL Consortium, Ovaskainen, O., and Dunson, D. B. (2026). *Predicting global biodiversity via Hubbell regression*. bioRxiv.

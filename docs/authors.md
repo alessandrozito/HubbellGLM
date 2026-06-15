@@ -11,12 +11,13 @@ Source:
 [`DESCRIPTION`](https://github.com/alessandrozito/HubbellGLM/blob/HEAD/DESCRIPTION)
 
 Zito A (2026). *HubbellGLM: Predicting biodiversity via the Hubbell
-regression*. https://alessandrozito.github.io/HubbellGLM/,
-https://github.com/alessandrozito/HubbellGLM.
+regression*. R package version 1.0.0,
+<https://alessandrozito.github.io/HubbellGLM/>.
 
     @Manual{,
       title = {HubbellGLM: Predicting biodiversity via the Hubbell regression},
       author = {Alessandro Zito},
       year = {2026},
-      note = {https://alessandrozito.github.io/HubbellGLM/, https://github.com/alessandrozito/HubbellGLM},
+      note = {R package version 1.0.0},
+      url = {https://alessandrozito.github.io/HubbellGLM/},
     }

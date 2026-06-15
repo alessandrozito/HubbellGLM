@@ -3,13 +3,13 @@
 ### Introduction
 
 The **HubbellGLM** package implements Hubbell regression, a generalized
-linear model (GLM) for $\alpha$-diversity (Zito et al. 2026). The model
-links environmental covariates to Hubbell’s fundamental biodiversity
-number $\alpha$, a single dimension-free parameter that controls the
-rate at which new species accumulate as a function of sample size, and
-can be converted analytically into Shannon entropy, the Simpson index,
-and Hill numbers. This bypassess the need to choose which biodiversity
-index to use in the analysis.
+linear model (GLM) for $`\alpha`$-diversity (Zito et al. 2026). The
+model links environmental covariates to Hubbell’s fundamental
+biodiversity number $`\alpha`$, a single dimension-free parameter that
+controls the rate at which new species accumulate as a function of
+sample size, and can be converted analytically into Shannon entropy, the
+Simpson index, and Hill numbers. This bypassess the need to choose which
+biodiversity index to use in the analysis.
 
 This vignette introduces the statistical framework and demonstrates the
 package using the **Barro Colorado Island (BCI) dataset**, a classic
@@ -23,77 +23,89 @@ original version of the data is downloaded from the R package `vegan`
 
 #### Hubbell’s fundamental biodiversity number
 
-Let $Y^{(n)}$ denote the number of distinct species (richness) observed
-in a sample of $n$ individuals drawn from a community. Under Hubbell’s
-neutral theory of biodiversity (Hubbell 2001), the distribution of
-$Y^{(n)}$ is given by
+Let $`Y^{(n)}`$ denote the number of distinct species (richness)
+observed in a sample of $`n`$ individuals drawn from a community. Under
+Hubbell’s neutral theory of biodiversity (Hubbell 2001), the
+distribution of $`Y^{(n)}`$ is given by
 
-$${\mathbb{P}}\left( Y^{(n)} = y;\,\alpha \right) = \frac{\alpha^{y}\,\Gamma(\alpha)}{\Gamma(\alpha + n)}\,\left| s(n,y) \right|,\qquad y = 1,\ldots,n,$$
+``` math
+\mathbb{P}(Y^{(n)} = y;\, \alpha) = \frac{\alpha^y \,\Gamma(\alpha)}{\Gamma(\alpha + n)}\,|s(n, y)|, \qquad y = 1, \ldots, n,
+```
 
-where $\left| s(n,y) \right|$ are the (unsigned) Stirling numbers of the
-first kind, $\Gamma(\cdot)$ is the gamma function, and $\alpha > 0$ is
-the **fundamental biodiversity number** (Hubbell 2001). This
-distribution arises from the Ewens sampling formula (Ewens 1972), which
-is mathematically equivalent to the Dirichlet process described in
+where $`|s(n, y)|`$ are the (unsigned) Stirling numbers of the first
+kind, $`\Gamma(\cdot)`$ is the gamma function, and $`\alpha > 0`$ is the
+**fundamental biodiversity number** (Hubbell 2001). This distribution
+arises from the Ewens sampling formula (Ewens 1972), which is
+mathematically equivalent to the Dirichlet process described in
 (Ferguson 1973) and (Antoniak 1974).
 
-In this model, the richness $Y^{(n)}$ accumulates logarithmically as a
-function of $n$, so that
-$$\lim\limits_{n\rightarrow\infty}\frac{Y^{(n)}}{\log n} = \alpha.$$
-This relationship makes $\alpha$ equivalent to the biodiveristy number
-in the log-series model proposed by (Fisher, Corbet, and Williams 1943).
-A larger $\alpha$ means richer, more even communities; a smaller
-$\alpha$ means communities dominated by a few abundant species. In
-particular, the expected species richness in a sample of size $n$ is
+In this model, the richness $`Y^{(n)}`$ accumulates logarithmically as a
+function of $`n`$, so that
+``` math
+\lim_{n \to \infty} \frac{Y^{(n)}}{\log n} = \alpha.
+```
+This relationship makes $`\alpha`$ equivalent to the biodiveristy number
+in the log-series model proposed by (Fisher et al. 1943). A larger
+$`\alpha`$ means richer, more even communities; a smaller $`\alpha`$
+means communities dominated by a few abundant species. In particular,
+the expected species richness in a sample of size $`n`$ is
 
-$$\mu = {\mathbb{E}}\left( Y^{(n)} \right) = \sum\limits_{j = 0}^{n - 1}\frac{\alpha}{\alpha + j}.$$
+``` math
+\mu = \mathbb{E}(Y^{(n)}) = \sum_{j=0}^{n-1} \frac{\alpha}{\alpha + j}.
+```
 
 Hence, the above mean is interpreted as a **species accumulation curve**
-that grows logarithmically with $n$. Moreover, since Hubbell’s model is
-equivalent to the Dirichlet process, all standard biodiversity indices
-have closed-form model-based expressions in terms of $\alpha$(Rigon,
-Hsu, and Dunson 2025; Pitman 2006):
+that grows logarithmically with $`n`$. Moreover, since Hubbell’s model
+is equivalent to the Dirichlet process, all standard biodiversity
+indices have closed-form model-based expressions in terms of
+$`\alpha`$(Rigon et al. 2025; Pitman 2006):
 
 | Index | Sample-based | Model-based |
 |:---|:--:|:--:|
-| $\alpha$-diversity | ${\widehat{\alpha}}_{F}\log\left( 1 + n/{\widehat{\alpha}}_{F} \right) = y$ | $y = \sum_{j = 0}^{n - 1}\frac{\alpha}{\alpha + j}$ |
-| Shannon | $-\sum_{k}p_{k}\log p_{k}$ | $\psi(\alpha + 1) - \psi(1)$ |
-| Simpson | $\sum_{k}p_{k}^{2}$ | $1/(\alpha + 1)$ |
-| Hill ($q$) | $\frac{1}{q - 1}\left( 1 - \sum_{k}p_{k}^{q} \right)$ | $\alpha B(\alpha,q)$ |
+| $`\alpha`$-diversity | $`\hat\alpha_F \log(1 + n/\hat\alpha_F) = y`$ | $`y = \sum_{j=0}^{n-1} \tfrac{\alpha}{\alpha+j}`$ |
+| Shannon | $`-\sum_k p_k \log p_k`$ | $`\psi(\alpha+1) - \psi(1)`$ |
+| Simpson | $`\sum_k p_k^2`$ | $`1/(\alpha+1)`$ |
+| Hill ($`q`$) | $`\tfrac{1}{q-1}(1 - \sum_k p_k^q)`$ | $`\alpha B(\alpha, q)`$ |
 
-Here $\psi(\cdot)$ is the digamma function, $B(\cdot,\cdot)$ is the beta
-function, and $p_{k}$ is the relative abundance of the $k$-th species.
+Here $`\psi(\cdot)`$ is the digamma function, $`B(\cdot,\cdot)`$ is the
+beta function, and $`p_k`$ is the relative abundance of the $`k`$-th
+species.
 
 #### The Hubbell regression
 
-Since the distribution of $Y^{(n)}$ is an exponential family, we can use
-it to build a generalized linear model. In particular, our goal is to
-link the fundamental biodiversity number $\alpha$ with
-$\mathbf{x} \in {\mathbb{R}}^{p}$. We call this model **Hubbell
-regression**. Specifically, letting $i = 1,\ldots,N$ denote the sampling
-sites (i.e. the observations), we let
+Since the distribution of $`Y^{(n)}`$ is an exponential family, we can
+use it to build a generalized linear model. In particular, our goal is
+to link the fundamental biodiversity number $`\alpha`$ with
+$`\mathbf{x} \in \mathbb{R}^p`$. We call this model **Hubbell
+regression**. Specifically, letting $`i = 1, \ldots, N`$ denote the
+sampling sites (i.e. the observations), we let
 
-$$Y_{i}^{(n_{i})} \sim \text{Hubbell}\left( \alpha_{i},n_{i} \right),\qquad\log\alpha_{i} = \eta_{i} = \mathbf{x}_{i}^{\top}{\mathbf{β}}.$$
+``` math
+Y_i^{(n_i)} \sim \text{Hubbell}(\alpha_i, n_i), \qquad
+\log \alpha_i = \eta_i = \mathbf{x}_i^\top \boldsymbol{\beta}.
+```
 
-This is the **canonical link** ($\sigma = 0$). A one-unit increase in
-covariate $x_{ip}$ translates into a
-$100\%\left( e^{\beta_{p}} - 1 \right)$ change in $\alpha$-diversity.
+This is the **canonical link** ($`\sigma = 0`$). A one-unit increase in
+covariate $`x_{ip}`$ translates into a $`100\%(e^{\beta_p} - 1)`$ change
+in $`\alpha`$-diversity.
 
 ##### The polynomial link function
 
 The canonical link constrains species richness to grow logarithmically
-with $n$. To allow for heavier-tailed abundance distributions
+with $`n`$. To allow for heavier-tailed abundance distributions
 (e.g. arthropods), the package supports a more general **polynomial
-link** controlled by $\sigma < 1$:
+link** controlled by $`\sigma < 1`$:
 
-$$\mu_{i} = \sum\limits_{j = 0}^{n_{i} - 1}\frac{e^{\eta_{i}}}{e^{\eta_{i}} + j^{1 - \sigma}},\qquad\sigma < 1.$$
+``` math
+\mu_i = \sum_{j=0}^{n_i - 1} \frac{e^{\eta_i}}{e^{\eta_i} + j^{1-\sigma}}, \qquad \sigma < 1.
+```
 
-- $\sigma = 0$: logarithmic growth (canonical Hubbell link).
-- $\sigma \in (0,1)$: polynomial growth; the **regression-based
-  diversity index** is $S_{\sigma}(\eta) = e^{\eta}/\sigma$.
-- $\sigma < 0$: finite asymptotic richness.
+- $`\sigma = 0`$: logarithmic growth (canonical Hubbell link).
+- $`\sigma \in (0, 1)`$: polynomial growth; the **regression-based
+  diversity index** is $`S_\sigma(\eta) = e^\eta / \sigma`$.
+- $`\sigma < 0`$: finite asymptotic richness.
 
-The parameter $\sigma$ is estimated by maximum likelihood via
+The parameter $`\sigma`$ is estimated by maximum likelihood via
 [`estimate_sigma()`](https://alessandrozito.github.io/HubbellGLM/reference/estimate_sigma.md)
 and then held fixed across nested model specifications to ensure
 comparable regression coefficients.
@@ -106,21 +118,25 @@ Standard GLM inference assumes conditionally independent observations.
 In species-richness data, the same species may appear in multiple sites,
 inducing cross-site dependence that the likelihood ignores. HubbellGLM
 corrects for this using **heteroskedastic-consistent sandwich standard
-errors**, where spatial dependence between sites $i$ and $k$ is measured
-by the Jaccard similarity index $s_{ik}$ (the fraction of shared species
-between the two samples).
+errors**, where spatial dependence between sites $`i`$ and $`k`$ is
+measured by the Jaccard similarity index $`s_{ik}`$ (the fraction of
+shared species between the two samples).
 
-Let $\mathbf{X} \in {\mathbb{R}}^{N \times p}$ be the design matrix,
-$\widehat{\mathbf{W}} = \text{diag}\left( {\widehat{w}}_{1},\ldots,{\widehat{w}}_{N} \right)$
-the matrix of IRLS working weights, and
-${\widehat{\mathbf{u}}}_{i} = \partial\log\mathcal{L}({\mathbf{β}})/\partial{\mathbf{β}}|_{\widehat{\mathbf{β}}}$
-the score for observation $i$. The **Jaccard-adjusted
+Let $`\mathbf{X} \in \mathbb{R}^{N \times p}`$ be the design matrix,
+$`\hat{\mathbf{W}} = \text{diag}(\hat{w}_1, \ldots, \hat{w}_N)`$ the
+matrix of IRLS working weights, and
+$`\hat{\mathbf{u}}_i = \partial \log \mathcal{L}(\boldsymbol{\beta}) / \partial \boldsymbol{\beta}|_{\hat{\boldsymbol{\beta}}}`$
+the score for observation $`i`$. The **Jaccard-adjusted
 variance–covariance matrix** is
 
-$$\widehat{\text{se}}\left( \widehat{\mathbf{β}} \right) = \left( \mathbf{X}^{\top}\widehat{\mathbf{W}}\mathbf{X} \right)^{-1}\left( \sum\limits_{i,k}s_{ik}\,{\widehat{\mathbf{u}}}_{i}{\widehat{\mathbf{u}}}_{k}^{\top} \right)\left( \mathbf{X}^{\top}\widehat{\mathbf{W}}\mathbf{X} \right)^{-1}.$$
+``` math
+\widehat{\text{se}}(\hat{\boldsymbol{\beta}}) = (\mathbf{X}^\top \hat{\mathbf{W}} \mathbf{X})^{-1}
+\left(\sum_{i,k} s_{ik}\, \hat{\mathbf{u}}_i \hat{\mathbf{u}}_k^\top \right)
+(\mathbf{X}^\top \hat{\mathbf{W}} \mathbf{X})^{-1}.
+```
 
 This is computed by `vcov_species(fit, Dshared)`, where `Dshared` is an
-$N \times N$ matrix of pairwise Jaccard similarities. When species
+$`N \times N`$ matrix of pairwise Jaccard similarities. When species
 membership between sites is unavailable (as in the BCI example below),
 the standard Fisher-information-based `vcov(fit)` is used.
 
@@ -136,6 +152,7 @@ The main fitting function mirrors the syntax of
 `y` is the observed richness.
 
 ``` r
+
 fit <- HubbellGLM(cbind(n, y) ~ x1 + x2,
                   family = hubbell(sigma = 0),
                   data   = mydata)
@@ -163,11 +180,12 @@ with [`summary()`](https://rdrr.io/r/base/summary.html),
 ### `hubbell()` — family object
 
 ``` r
+
 hubbell(link = "polyseries", sigma = 0)
 ```
 
 Sets the GLM family. `sigma = 0` gives the canonical (logarithmic) link;
-any value in $(-\infty,1)$ gives the polynomial link. Use
+any value in $`(-\infty, 1)`$ gives the polynomial link. Use
 [`quasihubbell()`](https://alessandrozito.github.io/HubbellGLM/reference/quasihubbell.md)
 for quasi-likelihood inference when the variance is suspected to be
 inflated.
@@ -175,28 +193,31 @@ inflated.
 ### `estimate_sigma()` — estimate the growth-rate parameter
 
 ``` r
+
 sigma_hat <- estimate_sigma(cbind(n, y) ~ 1, data = mydata)
 ```
 
-Finds the maximum-likelihood $\widehat{\sigma}$ by minimising the BIC of
-the null model over $\sigma \in (-\infty,0.9)$ using `nlminb`. Fix
-$\sigma$ to this value for all subsequent models to ensure comparability
-of regression coefficients across nested specifications.
+Finds the maximum-likelihood $`\hat\sigma`$ by minimising the BIC of the
+null model over $`\sigma \in (-\infty, 0.9)`$ using `nlminb`. Fix
+$`\sigma`$ to this value for all subsequent models to ensure
+comparability of regression coefficients across nested specifications.
 
 ### `predict.HubbellGLM()` — predict richness at new sites
 
 ``` r
+
 predict(fit, newdata = new_sites, type = "response")
 ```
 
 - `type = "link"` returns
-  $\widehat{\eta} = \mathbf{x}^{\top}\widehat{\mathbf{β}}$.
+  $`\hat\eta = \mathbf{x}^\top \hat{\boldsymbol{\beta}}`$.
 - `type = "response"` returns the predicted mean richness
-  $\widehat{\mu} = g^{-1}\left( \widehat{\eta} \right)$.
+  $`\hat\mu = g^{-1}(\hat\eta)`$.
 
 ### `predict_curve()` — predicted accumulation curve
 
 ``` r
+
 curve <- predict_curve(fit, xnew = new_site, n = 2000, npoints = 200)
 ```
 
@@ -208,6 +229,7 @@ location.
 ### `vcov_species()` — Jaccard-adjusted variance–covariance
 
 ``` r
+
 Dshared  <- get_shared_species(species_matrix)  # N x N Jaccard matrix
 vcov_adj <- vcov_species(fit, Dshared)
 ```
@@ -232,6 +254,7 @@ Island 50-ha plot. Each row is one subplot with:
 - `Stream`: proximity to a stream (`Yes`/`No`).
 
 ``` r
+
 library(HubbellGLM)
 
 data("BarroColorado")
@@ -246,6 +269,7 @@ head(BarroColorado)
 ```
 
 ``` r
+
 plot(BarroColorado$n, BarroColorado$y,
      col  = as.integer(BarroColorado$Habitat),
      pch  = 16, cex = 0.9,
@@ -267,6 +291,7 @@ types.
 These are three models run with the canonical link
 
 ``` r
+
 # M0: the null model
 fit_null <- HubbellGLM(cbind(n, y) ~ 1,
                      family = hubbell(sigma = 0),
@@ -316,12 +341,12 @@ summary(fit_M3)
 
 #### Interpreting coefficients
 
-Coefficients are on the log-$\alpha$ scale. A coefficient
-${\widehat{\beta}}_{p}$ means a one-unit increase in $x_{p}$ is
-associated with a $100\%\left( e^{{\widehat{\beta}}_{p}} - 1 \right)$
-change in $\alpha$-diversity.
+Coefficients are on the log-$`\alpha`$ scale. A coefficient
+$`\hat\beta_p`$ means a one-unit increase in $`x_p`$ is associated with
+a $`100\%(e^{\hat\beta_p} - 1)`$ change in $`\alpha`$-diversity.
 
 ``` r
+
 round(100 * (exp(coef(fit_M3)) - 1), 2)
 #>     (Intercept)          EnvHet   HabitatOldLow HabitatOldSlope    HabitatSwamp 
 #>         2997.75            7.41           15.34           14.28           30.55 
@@ -332,6 +357,7 @@ round(100 * (exp(coef(fit_M3)) - 1), 2)
 #### Model comparison via deviance
 
 ``` r
+
 cat("Null deviance:    ", round(deviance(fit_null), 1), "\n")
 #> Null deviance:     49.3
 cat("M1 deviance:      ", round(deviance(fit_M1),  1), "\n")
@@ -342,9 +368,10 @@ cat("M3 deviance:      ", round(deviance(fit_M3),  1), "\n")
 #> M3 deviance:       34.5
 ```
 
-The pseudo-$R^{2}$ for each model relative to the null:
+The pseudo-$`R^2`$ for each model relative to the null:
 
 ``` r
+
 1 - deviance(fit_M3) / deviance(fit_null)
 #> [1] 0.2997722
 ```
@@ -357,6 +384,7 @@ at any new covariate combination. Here we compare a high-heterogeneity
 `OldHigh` subplot with a near-stream `Young` subplot.
 
 ``` r
+
 new_sites <- data.frame(
   n       = c(500, 500),
   y       = c(1L,  1L),      # placeholder required by the formula
@@ -400,10 +428,11 @@ Predicted accumulation curves for two contrasting subplot types.
 
 #### Derived biodiversity indices
 
-Once $\widehat{\alpha}$ is recovered from the fitted model, all standard
+Once $`\hat\alpha`$ is recovered from the fitted model, all standard
 biodiversity indices follow analytically.
 
 ``` r
+
 alpha_n <- function(mu, n) {
   uniroot(function(a) mean_dirichlet_process(a, n) - mu,
           c(1e-6, 1e6))$root
@@ -432,6 +461,7 @@ Compare nested models directly using
 [`BIC()`](https://rdrr.io/r/stats/AIC.html).
 
 ``` r
+
 aic_vals <- c(
   Null     = AIC(fit_null),
   EnvHet   = AIC(fit_M1),
@@ -455,60 +485,57 @@ The model with the lowest AIC/BIC is preferred. Note that
 can also be called directly for automated backward/forward selection;
 see `?step.hubbell`.
 
-### Estimate $\sigma$
+### Estimate $`\sigma`$
 
 Before fitting any covariate model, estimate the accumulation-curve
 growth rate from the null model.
 
 ``` r
+
 sigma_hat <- estimate_sigma(formula = fit_M3$formula, data = BarroColorado)
 #> Evaluating sigma =  0 
 #> Evaluating sigma =  1.490116e-08 
 #> Evaluating sigma =  -1 
 #> Evaluating sigma =  -0.9999822 
 #> Evaluating sigma =  -0.9063331 
-#> Evaluating sigma =  -0.9063401 
-#> Evaluating sigma =  -0.2471878 
-#> Evaluating sigma =  -0.7269672 
-#> Evaluating sigma =  -0.7269869 
-#> Evaluating sigma =  -0.5742469 
-#> Evaluating sigma =  -0.5742609 
-#> Evaluating sigma =  -0.6462721 
-#> Evaluating sigma =  -0.6462619 
-#> Evaluating sigma =  -0.6373287 
-#> Evaluating sigma =  -0.6373382 
-#> Evaluating sigma =  -0.6373287
+#> Evaluating sigma =  -0.90634 
+#> Evaluating sigma =  -0.2472168 
+#> Evaluating sigma =  -0.7269597 
+#> Evaluating sigma =  -0.7269794 
+#> Evaluating sigma =  -0.5742515 
+#> Evaluating sigma =  -0.5742655 
+#> Evaluating sigma =  -0.6462702 
+#> Evaluating sigma =  -0.6462601 
+#> Evaluating sigma =  -0.6373282 
+#> Evaluating sigma =  -0.6373377 
+#> Evaluating sigma =  -0.6373282
 cat("Estimated sigma:", round(sigma_hat, 4), "\n")
 #> Estimated sigma: -0.6373
 ```
 
 A value near zero indicates near-logarithmic growth, which is consistent
-with the Dirichlet-process baseline. Values in $(0,1)$ indicate
-polynomial (heavier-tailed) growth, while $\sigma < 0$ implies that the
-accumulation curve eventually converges to a finite number. —
+with the Dirichlet-process baseline. Values in $`(0, 1)`$ indicate
+polynomial (heavier-tailed) growth, while $`\sigma < 0`$ implies that
+the accumulation curve eventually converges to a finite number. —
 
 ## Session information
 
 ``` r
+
 sessionInfo()
-#> R version 4.3.1 (2023-06-16)
-#> Platform: x86_64-pc-linux-gnu (64-bit)
-#> Running under: Ubuntu 20.04.6 LTS
+#> R version 4.6.0 (2026-04-24)
+#> Platform: aarch64-apple-darwin23
+#> Running under: macOS Tahoe 26.5.1
 #> 
 #> Matrix products: default
-#> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
-#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/liblapack.so.3;  LAPACK version 3.9.0
+#> BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib 
+#> LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 #> 
 #> locale:
-#>  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
-#>  [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
-#>  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
-#>  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
-#>  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
-#> [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+#> [1] en_CA.UTF-8/en_CA.UTF-8/en_CA.UTF-8/C/en_CA.UTF-8/en_CA.UTF-8
 #> 
-#> time zone: Europe/Berlin
-#> tzcode source: system (glibc)
+#> time zone: America/Toronto
+#> tzcode source: internal
 #> 
 #> attached base packages:
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
@@ -517,14 +544,14 @@ sessionInfo()
 #> [1] HubbellGLM_1.0.0
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] digest_0.6.36     desc_1.4.2        R6_2.5.1          fastmap_1.2.0    
-#>  [5] xfun_0.57         cachem_1.0.6      knitr_1.51        htmltools_0.5.8.1
-#>  [9] rmarkdown_2.27    lifecycle_1.0.4   cli_3.6.3         sass_0.4.9       
-#> [13] pkgdown_2.2.0     textshaping_0.4.0 jquerylib_0.1.4   systemfonts_1.1.0
-#> [17] compiler_4.3.1    rprojroot_2.0.3   rstudioapi_0.14   tools_4.3.1      
-#> [21] ragg_1.5.2        bslib_0.8.0       evaluate_0.24.0   Rcpp_1.0.14      
-#> [25] yaml_2.3.10       jsonlite_1.8.4    htmlwidgets_1.6.1 rlang_1.1.4      
-#> [29] fs_1.6.0
+#>  [1] cli_3.6.6         knitr_1.51        rlang_1.2.0       xfun_0.58        
+#>  [5] otel_0.2.0        textshaping_1.0.5 jsonlite_2.0.0    htmltools_0.5.9  
+#>  [9] ragg_1.5.2        sass_0.4.10       stats4_4.6.0      rmarkdown_2.31   
+#> [13] evaluate_1.0.5    jquerylib_0.1.4   fastmap_1.2.0     yaml_2.3.12      
+#> [17] lifecycle_1.0.5   compiler_4.6.0    codetools_0.2-20  fs_2.1.0         
+#> [21] Rcpp_1.1.1-1.1    systemfonts_1.3.2 digest_0.6.39     R6_2.6.1         
+#> [25] bslib_0.11.0      tools_4.6.0       pkgdown_2.2.0     cachem_1.1.0     
+#> [29] desc_1.4.3
 ```
 
 ------------------------------------------------------------------------
@@ -549,9 +576,9 @@ a Random Sample of an Animal Population.” *Journal of Animal Ecology* 12
 Hubbell, Stephen P. 2001. *The Unified Neutral Theory of Biodiversity
 and Biogeography*. Princeton University Press.
 
-Oksanen, Jari, Gavin L. Simpson, F. Guillaume Blanchet, Roeland Kindt,
-Pierre Legendre, Peter R. Minchin, R. B. O’Hara, et al. 2024. *Vegan:
-Community Ecology Package*. <https://CRAN.R-project.org/package=vegan>.
+Oksanen, Jari, Gavin L. Simpson, F. Guillaume Blanchet, et al. 2024.
+*Vegan: Community Ecology Package*.
+<https://CRAN.R-project.org/package=vegan>.
 
 Pitman, Jim. 2006. *Combinatorial Stochastic Processes*. Vol. 1875.
 Lecture Notes in Mathematics. Springer.
@@ -559,7 +586,5 @@ Lecture Notes in Mathematics. Springer.
 Rigon, Tommaso, Cheng-Long Hsu, and David B. Dunson. 2025. “A Bayesian
 Theory for Estimation of Biodiversity.” *arXiv:2502.01333*.
 
-Zito, Alessandro, Tommaso Rigon, Tomas Roslin, Pekka Niittynen, Paul D.
-N. Hebert, Evgeny V. Zakharov, Sujeevan Ratnasingham, iBOL Consortium,
-Otso Ovaskainen, and David B. Dunson. 2026. “Predicting Global
-Biodiversity via Hubbell Regression.” *BioArxiv*.
+Zito, Alessandro, Tommaso Rigon, Tomas Roslin, et al. 2026. “Predicting
+Global Biodiversity via Hubbell Regression.” *BioArxiv*.
