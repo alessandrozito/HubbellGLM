@@ -2,7 +2,7 @@
 % Please edit documentation in R/link.R
 \name{hubbell}
 \alias{hubbell}
-\title{Hubbell family of genetalized linear models}
+\title{Hubbell family of generalized linear models}
 \usage{
 hubbell(link = "polyseries", sigma = 0)
 }
@@ -13,5 +13,5 @@ hubbell(link = "polyseries", sigma = 0)
 link  \code{link = 'polyseries'}. It is set to 0 when \code{link = 'dp'} (logarithmic growth).}
 }
 \description{
-Hubbell family of genetalized linear models
+Hubbell family of generalized linear models
 }

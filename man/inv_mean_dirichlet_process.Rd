@@ -18,5 +18,7 @@ The concentration parameter \eqn{\alpha} (scalar or vector).
 \description{
 Given a target mean \eqn{\mu} and a community size \eqn{n}, finds the
 concentration parameter \eqn{\alpha} such that
-\eqn{E[Y^{(n)}; \alpha] = \mu} via \code{uniroot}.
+\eqn{E[Y^{(n)}; \alpha] = \mu}, by safeguarded Newton iteration in C++.
+The derivative is available in closed form (\code{deriv_dirichlet_process}),
+so no bracketing search is needed.
 }

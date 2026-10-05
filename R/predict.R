@@ -38,7 +38,7 @@ predict.HubbellGLM <- function(
             pred <- family(object)$linkinv(pred)
           } else {
             sigma <- family(object)$sigma
-            pred <- family(object)$linkinv(pred, newdata[, object$name_size], sigma)
+            pred <- family(object)$linkinv(pred, newdata[[object$name_size]], sigma)
           }
         },
         link = ,
@@ -74,8 +74,8 @@ predict.HubbellGLM <- function(
             se.fit <- se.fit * abs(family(object)$mu.eta(fit, object$size, sigma))
             fit <- family(object)$linkinv(fit, object$size, sigma)
           } else {
-            se.fit <- se.fit * abs(family(object)$mu.eta(fit, newdata[, object$name_size], sigma))
-            fit <- family(object)$linkinv(fit, newdata[, object$name_size], sigma)
+            se.fit <- se.fit * abs(family(object)$mu.eta(fit, newdata[[object$name_size]], sigma))
+            fit <- family(object)$linkinv(fit, newdata[[object$name_size]], sigma)
           }
         }
       },

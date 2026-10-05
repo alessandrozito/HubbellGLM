@@ -1,6 +1,6 @@
-# Estimate the sigma parameter for a HubbellGLM model via BIC minimisation
+# Estimate the sigma parameter for a HubbellGLM model via BIC minimization
 
-Estimate the sigma parameter for a HubbellGLM model via BIC minimisation
+Estimate the sigma parameter for a HubbellGLM model via BIC minimization
 
 ## Usage
 
@@ -26,5 +26,5 @@ estimate_sigma(formula, data, startpoint = 0, verbose = TRUE)
 
 ## Value
 
-A scalar: the value of `sigma` that minimises the BIC of the fitted
+A scalar: the value of `sigma` that minimizes the BIC of the fitted
 model.

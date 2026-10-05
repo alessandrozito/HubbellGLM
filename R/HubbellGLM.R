@@ -193,7 +193,7 @@ formula.HubbellGLM <- function(x, ...)
 }
 
 
-#' Estimate the sigma parameter for a HubbellGLM model via BIC minimisation
+#' Estimate the sigma parameter for a HubbellGLM model via BIC minimization
 #'
 #' @param formula A formula specifying the model (same syntax as
 #'   \code{\link{HubbellGLM}}).
@@ -201,7 +201,7 @@ formula.HubbellGLM <- function(x, ...)
 #' @param verbose Logical; if \code{TRUE} (default), prints the sigma value
 #'   evaluated at each iteration.
 #'
-#' @return A scalar: the value of \code{sigma} that minimises the BIC of the
+#' @return A scalar: the value of \code{sigma} that minimizes the BIC of the
 #'   fitted model.
 #'
 #' @export

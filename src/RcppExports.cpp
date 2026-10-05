@@ -91,6 +91,65 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// polyseries_meanvar_fast
+List polyseries_meanvar_fast(NumericVector size, NumericVector alpha, double sigma, int nthreads);
+RcppExport SEXP _HubbellGLM_polyseries_meanvar_fast(SEXP sizeSEXP, SEXP alphaSEXP, SEXP sigmaSEXP, SEXP nthreadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type size(sizeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(polyseries_meanvar_fast(size, alpha, sigma, nthreads));
+    return rcpp_result_gen;
+END_RCPP
+}
+// polyseries_mean_fast
+NumericVector polyseries_mean_fast(NumericVector size, NumericVector alpha, double sigma, int nthreads);
+RcppExport SEXP _HubbellGLM_polyseries_mean_fast(SEXP sizeSEXP, SEXP alphaSEXP, SEXP sigmaSEXP, SEXP nthreadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type size(sizeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(polyseries_mean_fast(size, alpha, sigma, nthreads));
+    return rcpp_result_gen;
+END_RCPP
+}
+// inv_polyseries_fast
+NumericVector inv_polyseries_fast(NumericVector mu_target, NumericVector size, double sigma, double tol, int maxit, int nthreads);
+RcppExport SEXP _HubbellGLM_inv_polyseries_fast(SEXP mu_targetSEXP, SEXP sizeSEXP, SEXP sigmaSEXP, SEXP tolSEXP, SEXP maxitSEXP, SEXP nthreadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type mu_target(mu_targetSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type size(sizeSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< int >::type maxit(maxitSEXP);
+    Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(inv_polyseries_fast(mu_target, size, sigma, tol, maxit, nthreads));
+    return rcpp_result_gen;
+END_RCPP
+}
+// inv_mean_dp_fast
+NumericVector inv_mean_dp_fast(NumericVector mu_target, NumericVector size, double tol, int maxit, int nthreads);
+RcppExport SEXP _HubbellGLM_inv_mean_dp_fast(SEXP mu_targetSEXP, SEXP sizeSEXP, SEXP tolSEXP, SEXP maxitSEXP, SEXP nthreadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type mu_target(mu_targetSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type size(sizeSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< int >::type maxit(maxitSEXP);
+    Rcpp::traits::input_parameter< int >::type nthreads(nthreadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(inv_mean_dp_fast(mu_target, size, tol, maxit, nthreads));
+    return rcpp_result_gen;
+END_RCPP
+}
 // DPspecies_cpp
 int DPspecies_cpp(double alpha, int size);
 RcppExport SEXP _HubbellGLM_DPspecies_cpp(SEXP alphaSEXP, SEXP sizeSEXP) {
@@ -147,6 +206,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_HubbellGLM_polyseries_var_grid", (DL_FUNC) &_HubbellGLM_polyseries_var_grid, 4},
     {"_HubbellGLM_polyseries_mean", (DL_FUNC) &_HubbellGLM_polyseries_mean, 3},
     {"_HubbellGLM_polyseries_var", (DL_FUNC) &_HubbellGLM_polyseries_var, 3},
+    {"_HubbellGLM_polyseries_meanvar_fast", (DL_FUNC) &_HubbellGLM_polyseries_meanvar_fast, 4},
+    {"_HubbellGLM_polyseries_mean_fast", (DL_FUNC) &_HubbellGLM_polyseries_mean_fast, 4},
+    {"_HubbellGLM_inv_polyseries_fast", (DL_FUNC) &_HubbellGLM_inv_polyseries_fast, 6},
+    {"_HubbellGLM_inv_mean_dp_fast", (DL_FUNC) &_HubbellGLM_inv_mean_dp_fast, 5},
     {"_HubbellGLM_DPspecies_cpp", (DL_FUNC) &_HubbellGLM_DPspecies_cpp, 2},
     {"_HubbellGLM_lastirling1", (DL_FUNC) &_HubbellGLM_lastirling1, 1},
     {"_HubbellGLM_lastirlings1", (DL_FUNC) &_HubbellGLM_lastirlings1, 1},

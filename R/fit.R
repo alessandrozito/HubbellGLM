@@ -295,8 +295,8 @@ glm.fit.hubbell <- function(x, y,
     # All models must have the same alpha here. This is estimated
     # through an appropriate function, which we specify now.
     #sum(weights * y) / sum(weights)
-    beta_null <- estimateNullModel(y = y, n = size, sigma = sigma)
-    polyseries_mean(alpha = rep(exp(beta_null), length(size)), size = size, sigma = sigma)
+    beta_null <- estimateNullModel(y = y, n = size, sigma = sigma, family = family)
+    linkinv(rep_len(beta_null, length(size)), size, sigma)
   } else {
     linkinv(offset, size, sigma)
   }
@@ -329,52 +329,69 @@ glm.fit.hubbell <- function(x, y,
 
 
 
-estimateNullModel <- function(y, n, sigma, tol = 1e-16, beta_start = NULL, maxiter = 10000){
-  g_inv <- function(mu_target, size, sigma) {
-    if (mu_target <= 1) {
-      return(1e-7)
-    } else if (mu_target >= size) {
-      return(1e8)
-    } else {
-      uniroot(function(x) polyseries_mean(size, x, sigma) - mu_target, c(1e-10, 1e8), tol = 1e-8)$root
-    }
-  }
-  g_inv <- Vectorize(g_inv, vectorize.args = c("mu_target", "size"))
+# Fit the intercept-only model (M0) and return its coefficient beta0 = log(alpha).
+#
+# Every observation shares one alpha, but this is still not the usual glm
+# shortcut sum(weights * y) / sum(weights): each observation has its own
+# community size n_i, so the null means mu_i = g^-1(beta0; n_i) differ across
+# observations even though beta0 does not.
+#
+# It is, however, nothing more than the ordinary IRLS of glm.fit.hubbell with
+# X = 1, so the quantities are taken from the family object instead of being
+# re-derived here. With a single column the weighted least squares step
+# collapses to the scalar update beta0 <- sum(w * z) / sum(w), which is why no
+# QR solve appears below.
+estimateNullModel <- function(y, n, sigma, family, tol = 1e-10,
+                              beta_start = NULL, maxiter = 100) {
+  ny <- length(y)
 
-  loglik <- numeric(maxiter)
-  # Initialization
-  mu <- y
-  alpha <- g_inv(mu, n, sigma = sigma)
-  eta <- log(alpha)
-  w <- mu + alpha^2 * (trigamma(alpha + n) - trigamma(alpha))
-  z <- eta + (y - mu) / w
+  # eta_i solves mu(eta_i; n_i) = y_i one observation at a time. Since mu is
+  # increasing in eta, beta0 = min(eta_i) makes every mu_i <= y_i and
+  # beta0 = max(eta_i) makes every mu_i >= y_i, so the score
+  #   U(beta0) = sum_i (y_i - mu_i) * (dmu_i/deta) / V(mu_i)
+  # is non-negative at one end and non-positive at the other: the root is
+  # bracketed by the per-observation solutions.
+  eta_i <- family$linkfun(y, n, sigma)
+  lo <- min(eta_i)
+  hi <- max(eta_i)
+  if (!(hi > lo)) return(mean(eta_i))
 
-  # First value of the likelihood
-  loglik[1] <- sum(y * eta - lgamma(alpha + n) + lgamma(alpha))
-  X <- matrix(1, nrow = length(y))
-  # Iterative procedure
-  for (t in 2:maxiter) {
-    # Find coefficients
-    beta <- solve(qr(crossprod(X * w, X)), crossprod(X * w, z))
-    eta <- c(X %*% beta)
-    exp_eta <- exp(eta)
-    # Calculate the mean
-    mu <- polyseries_mean(size = n, alpha = exp_eta, sigma = sigma)
-    # Calculate the variance of the distribution
-    alpha <- g_inv(mu, n, sigma = 0)
-    v <- alpha * (digamma(alpha + n) - digamma(alpha)) + alpha^2 * (trigamma(alpha + n) - trigamma(alpha))
-    # Calculate glm weights
-    w <- (1 / v) * polyseries_var(size =  n, alpha = exp_eta, sigma = sigma) ^ 2
-    # Calculate linearized response
-    z <- eta + (y - mu) / sqrt(w * v)
-    # Update loglikelihood
-    loglik[t] <- sum(y * log(alpha) - lgamma(alpha + n) + lgamma(alpha))
-    if (abs(loglik[t] - loglik[t - 1]) < tol) {
-      break
+  beta <- if (is.null(beta_start)) mean(eta_i) else beta_start
+  beta <- min(max(beta, lo), hi)
+
+  for (t in seq_len(maxiter)) {
+    eta <- rep_len(beta, ny)
+    mu  <- family$linkinv(eta, n, sigma)
+    dmu <- family$mu.eta(eta, n, sigma)      # d mu / d eta
+    v   <- family$variance(mu, n)            # V(mu)
+
+    w <- dmu^2 / v                           # IRLS weight
+    z <- eta + (y - mu) / dmu                # working response
+    sw <- sum(w)
+    if (!is.finite(sw) || sw <= 0) {
+      stop("null model produced non-positive IRLS weights", call. = FALSE)
     }
-    #stop("The algorithm has not reached convergence")
+    beta_new <- sum(w * z) / sw
+
+    # beta_new - beta = U(beta) / sum(w), and sum(w) > 0, so the direction of
+    # the IRLS step is the sign of the score. That narrows the bracket for free.
+    if (is.finite(beta_new) && beta_new > beta) lo <- beta else hi <- beta
+    # Unsafeguarded IRLS can be thrown a long way by a poor starting value
+    # (mu near its boundary makes dmu tiny and z explode), so any step leaving
+    # the bracket is replaced by a bisection.
+    if (!is.finite(beta_new) || beta_new <= lo || beta_new >= hi) {
+      beta_new <- 0.5 * (lo + hi)
+    }
+
+    converged <- abs(beta_new - beta) < tol * max(1, abs(beta_new))
+    beta <- beta_new
+    if (converged) break
   }
-  return(c(beta))
+  if (t == maxiter) {
+    warning("estimateNullModel: reached maxiter without converging",
+            call. = FALSE)
+  }
+  beta
 }
 
 #' Variance-covariance matrix for a HubbellGLM fit, optionally adjusted for
@@ -384,7 +401,10 @@ estimateNullModel <- function(y, n, sigma, tol = 1e-16, beta_start = NULL, maxit
 #' @param similarity An optional \eqn{n \times n} similarity matrix encoding
 #'   dependence between the \eqn{n} observations used to fit \code{fit}.
 #'   The diagonal must be 1 and all off-diagonal entries must be in
-#'   \eqn{[0, 1)}. If \code{NULL} (default), returns \code{vcov(fit)}.
+#'   \eqn{[0, 1)}. A sparse \code{Matrix} (\code{dgCMatrix} or the symmetric
+#'   \code{dsCMatrix} returned by \code{get_shared_species}) is accepted and
+#'   preferred at large \eqn{n}. If \code{NULL} (default), returns
+#'   \code{vcov(fit)}.
 #'
 #' @return A \eqn{p \times p} variance-covariance matrix.
 #'
@@ -397,22 +417,46 @@ vcov_shared <- function(fit, similarity = NULL) {
     return(vcov(fit))
   }
   nobs <- nrow(model.matrix(fit))
-  if (!is.matrix(similarity)) {
-    stop("'similarity' must be a matrix")
+  # A sparse Matrix is not a base matrix, so test for both.
+  if (!(is.matrix(similarity) || methods::is(similarity, "Matrix"))) {
+    stop("'similarity' must be a matrix or a Matrix")
   }
   if (!identical(dim(similarity), c(nobs, nobs))) {
-    stop(sprintf("'similarity' must be a %d x %d matrix matching the number of observations in 'fit'", n, n))
+    stop(sprintf(paste("'similarity' must be a %d x %d matrix matching the",
+                       "number of observations in 'fit'"), nobs, nobs))
   }
-  if (!isTRUE(all(diag(similarity) == 1))) {
+  if (!isTRUE(all(Matrix::diag(similarity) == 1))) {
     stop("'similarity' must have 1 on the diagonal")
   }
-  off_diag <- similarity[row(similarity) != col(similarity)]
-  if (any(off_diag < 0) || any(off_diag >= 1)) {
+  # Check the off-diagonal without ever forming it. The old
+  # `similarity[row(similarity) != col(similarity)]` builds two n x n index
+  # matrices and an n^2 - n vector, which at n = 15,700 is several GB spent
+  # entirely on validation.
+  if (methods::is(similarity, "sparseMatrix")) {
+    # Zeros are structural and trivially in range, so only the stored values
+    # need checking; the diagonal was already confirmed to be 1.
+    st <- methods::as(similarity, "TsparseMatrix")
+    off <- st@i != st@j
+    bad_lo <- any(st@x[off] < 0)
+    bad_hi <- any(st@x[off] >= 1)
+  } else {
+    rng <- range(similarity[upper.tri(similarity)],
+                 similarity[lower.tri(similarity)])
+    bad_lo <- rng[1] < 0
+    bad_hi <- rng[2] >= 1
+  }
+  if (bad_lo || bad_hi) {
     stop("off-diagonal entries of 'similarity' must be in [0, 1)")
   }
 
   sigmaF      <- fit$sigma
-  FisherI_inv <- vcov(fit)
+  # The bread must be the UNSCALED inverse information (X'WX)^-1, not vcov().
+  # For a quasi family vcov() is dispersion * (X'WX)^-1, and since the bread
+  # appears on both sides it would contribute dispersion^2 while the meat below
+  # - built from V(mu), not dispersion * V(mu) - contributes none. A sandwich
+  # estimator is dispersion-free by construction; using vcov() here inflated
+  # every standard error by exactly the dispersion (31.5 on the GMTP sample).
+  FisherI_inv <- summary(fit)$cov.unscaled
   X           <- model.matrix(fit)
   y           <- fit$y
   mu          <- fit$fitted.values
@@ -420,9 +464,15 @@ vcov_shared <- function(fit, similarity = NULL) {
   alpha       <- inv_mean_dirichlet_process(mu_target = mu, size = size)
   v           <- alpha * (digamma(alpha + size) - digamma(alpha)) +
                  alpha^2 * (trigamma(alpha + size) - trigamma(alpha))
-  dlink       <- polyseries_var(size = size, alpha = exp(X %*% coef(fit)), sigma = sigmaF)
-  Scores      <- diag(c((y - mu) / v * dlink)) %*% X
-  meatD       <- crossprod(Scores, similarity %*% Scores)
+  dlink       <- polyseries_meanvar_fast(size = size, alpha = c(exp(X %*% coef(fit))), sigma = sigmaF)$var
+  # Row scaling, not a matrix product: diag(w) %*% X allocates an n x n dense
+  # matrix (1.97 GB at n = 15,700) to do what recycling does for free.
+  Scores      <- c((y - mu) / v * dlink) * X
+  # `similarity` is only ever multiplied - it is never inverted, and never
+  # needs to be, so a sparse operand stays sparse right through here.
+  # Matrix::crossprod dispatches for a base matrix against a Matrix; base
+  # crossprod() does not.
+  meatD       <- as.matrix(Matrix::crossprod(Scores, similarity %*% Scores))
   FisherI_inv %*% meatD %*% FisherI_inv
 }
 

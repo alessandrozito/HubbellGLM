@@ -2,7 +2,7 @@
 % Please edit documentation in R/HubbellGLM.R
 \name{estimate_sigma}
 \alias{estimate_sigma}
-\title{Estimate the sigma parameter for a HubbellGLM model via BIC minimisation}
+\title{Estimate the sigma parameter for a HubbellGLM model via BIC minimization}
 \usage{
 estimate_sigma(formula, data, startpoint = 0, verbose = TRUE)
 }
@@ -16,9 +16,9 @@ estimate_sigma(formula, data, startpoint = 0, verbose = TRUE)
 evaluated at each iteration.}
 }
 \value{
-A scalar: the value of \code{sigma} that minimises the BIC of the
+A scalar: the value of \code{sigma} that minimizes the BIC of the
   fitted model.
 }
 \description{
-Estimate the sigma parameter for a HubbellGLM model via BIC minimisation
+Estimate the sigma parameter for a HubbellGLM model via BIC minimization
 }

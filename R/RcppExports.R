@@ -25,6 +25,22 @@ polyseries_var <- function(size, alpha, sigma) {
     .Call('_HubbellGLM_polyseries_var', PACKAGE = 'HubbellGLM', size, alpha, sigma)
 }
 
+polyseries_meanvar_fast <- function(size, alpha, sigma, nthreads = 1L) {
+    .Call('_HubbellGLM_polyseries_meanvar_fast', PACKAGE = 'HubbellGLM', size, alpha, sigma, nthreads)
+}
+
+polyseries_mean_fast <- function(size, alpha, sigma, nthreads = 1L) {
+    .Call('_HubbellGLM_polyseries_mean_fast', PACKAGE = 'HubbellGLM', size, alpha, sigma, nthreads)
+}
+
+inv_polyseries_fast <- function(mu_target, size, sigma, tol = 1e-10, maxit = 100L, nthreads = 1L) {
+    .Call('_HubbellGLM_inv_polyseries_fast', PACKAGE = 'HubbellGLM', mu_target, size, sigma, tol, maxit, nthreads)
+}
+
+inv_mean_dp_fast <- function(mu_target, size, tol = 1e-10, maxit = 100L, nthreads = 1L) {
+    .Call('_HubbellGLM_inv_mean_dp_fast', PACKAGE = 'HubbellGLM', mu_target, size, tol, maxit, nthreads)
+}
+
 DPspecies_cpp <- function(alpha, size) {
     .Call('_HubbellGLM_DPspecies_cpp', PACKAGE = 'HubbellGLM', alpha, size)
 }

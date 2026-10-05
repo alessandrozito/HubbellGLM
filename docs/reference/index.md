@@ -8,7 +8,7 @@
   updated)
 - [`estimate_sigma()`](https://alessandrozito.github.io/HubbellGLM/reference/estimate_sigma.md)
   : Estimate the sigma parameter for a HubbellGLM model via BIC
-  minimisation
+  minimization
 
 ## Prediction
 
@@ -27,7 +27,7 @@
 ## Family objects
 
 - [`hubbell()`](https://alessandrozito.github.io/HubbellGLM/reference/hubbell.md)
-  : Hubbell family of genetalized linear models
+  : Hubbell family of generalized linear models
 - [`quasihubbell()`](https://alessandrozito.github.io/HubbellGLM/reference/quasihubbell.md)
   : Quasi-Hubbell family of generalized linear models
 

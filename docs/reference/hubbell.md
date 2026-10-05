@@ -1,6 +1,6 @@
-# Hubbell family of genetalized linear models
+# Hubbell family of generalized linear models
 
-Hubbell family of genetalized linear models
+Hubbell family of generalized linear models
 
 ## Usage
 

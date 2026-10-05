@@ -9,24 +9,11 @@
 #' @useDynLib HubbellGLM
 #' @export
 inv_polyseries <- function(mu_target, size, sigma) {
-  if (mu_target <= 1 + 1e-4) {
-    #sol <- .Machine$double.eps
-    mu_target <- 1 + 1e-4
-  } else if (mu_target >= size - 1e-4) {
-    mu_target <- size - 1e-4
-    #sol <- 1e18
-  }
-  # Invert the function
-  lb <- (mu_target - 1) / (size - mu_target)
-  ub <- (size - 1) ^ (1 - sigma) * (mu_target - 1) / (size - mu_target) + 1e-4
-  sol <- uniroot(function(x) HubbellGLM:::polyseries_mean(size, x, sigma) - mu_target,
-                 c(lb, ub), tol = 1e-6)$root
-  return(sol)
+  n <- max(length(mu_target), length(size))
+  inv_polyseries_fast(rep_len(as.numeric(mu_target), n),
+                      rep_len(as.numeric(size), n),
+                      sigma)
 }
-
-# Inverse function for the polynomial series
-#' @export
-inv_polyseries <- Vectorize(inv_polyseries, vectorize.args = c("mu_target", "size"))
 
 
 #------------------------------------------------ Dirichlet process link (canonical)
@@ -52,26 +39,13 @@ deriv_dirichlet_process <- function(alpha, n) {
   digamma(alpha + n) - digamma(alpha) + alpha * (trigamma(alpha + n) - trigamma(alpha))
 }
 
-# Find the associated alpha from the mean of the Dirichlet process
-inv_mean_dirichlet_process <- function(mu_target, size){
-  if (mu_target <= 1 + 1e-4) {
-    #sol <- .Machine$double.eps
-    mu_target <- 1 + 1e-4
-  } else if (mu_target >= size - 1e-4) {
-    mu_target <- size - 1e-4
-    #sol <- 1e18
-  }
-  lb <- (mu_target - 1) / (size - mu_target)
-  ub <- (size - 1) * (mu_target - 1) / (size - mu_target) + 1e-4
-  alpha <- uniroot(function(x) mean_dirichlet_process(x, size) - mu_target,
-                   c(lb, ub), tol = 1e-6)$root
-  return(alpha)
-}
 #' Invert the mean of the Dirichlet process distribution
 #'
 #' Given a target mean \eqn{\mu} and a community size \eqn{n}, finds the
 #' concentration parameter \eqn{\alpha} such that
-#' \eqn{E[Y^{(n)}; \alpha] = \mu} via \code{uniroot}.
+#' \eqn{E[Y^{(n)}; \alpha] = \mu}, by safeguarded Newton iteration in C++.
+#' The derivative is available in closed form (\code{deriv_dirichlet_process}),
+#' so no bracketing search is needed.
 #'
 #' @param mu_target Target mean value (scalar or vector, must be in
 #'   \eqn{(1, n)}).
@@ -80,7 +54,11 @@ inv_mean_dirichlet_process <- function(mu_target, size){
 #' @return The concentration parameter \eqn{\alpha} (scalar or vector).
 #'
 #' @export
-inv_mean_dirichlet_process <- Vectorize(inv_mean_dirichlet_process, vectorize.args = c("mu_target", "size"))
+inv_mean_dirichlet_process <- function(mu_target, size){
+  n <- max(length(mu_target), length(size))
+  inv_mean_dp_fast(rep_len(as.numeric(mu_target), n),
+                   rep_len(as.numeric(size), n))
+}
 
 #' Link function for the Hubbell generalized linear model
 #' @param link Name for the link function
@@ -97,13 +75,16 @@ make.link.hubbell <- function(link) {
            # Inverse link function
            linkinv <- function(eta, size., sigma.) {
              exp_eta <- pmax(exp(eta), .Machine$double.eps)
-             pmax(HubbellGLM:::polyseries_mean(size., exp_eta, sigma.), .Machine$double.eps)
+             pmax(HubbellGLM:::polyseries_mean_fast(size., exp_eta, sigma.),
+                  .Machine$double.eps)
            }
 
-           # Derivative of link function
+           # Derivative of link function. The variance comes out of the same
+           # series loop as the mean, so this is one pass over j, not two.
            mu.eta <- function(eta, size., sigma.) {
              exp_eta <- pmax(exp(eta), .Machine$double.eps)
-             pmax(HubbellGLM:::polyseries_var(size = size., alpha = exp_eta, sigma = sigma.),
+             pmax(HubbellGLM:::polyseries_meanvar_fast(size = size., alpha = exp_eta,
+                                                       sigma = sigma.)$var,
                   .Machine$double.eps)
            }
            valideta <- function(eta, size.) TRUE
@@ -140,7 +121,7 @@ make.link.hubbell <- function(link) {
 }
 
 
-#' Hubbell family of genetalized linear models
+#' Hubbell family of generalized linear models
 #'
 #' @param link  The link function to use. Available options are \code{dp}, and \code{polyseries}
 #' @param sigma Hyperparameter determining the polynomial growth. Must be \code{sigma < 1} for
@@ -190,9 +171,27 @@ hubbell <- function(link = "polyseries", sigma = 0) {
   # Valid values for mu
   validmu <- function(mu) all(is.finite(mu)) && all(mu >= 1)
 
+  # alpha(y) does not change during a fit - y and size are fixed while only mu
+  # moves - but dev.resids is called on every IRLS iteration. Cache it, guarded
+  # by an identity check so reusing this family object on different data still
+  # recomputes.
+  .alpha_y_cache <- new.env(parent = emptyenv())
+  alpha_of_y <- function(y, size.) {
+    if (!is.null(.alpha_y_cache$y) &&
+        identical(.alpha_y_cache$y, y) &&
+        identical(.alpha_y_cache$size, size.)) {
+      return(.alpha_y_cache$alpha)
+    }
+    a <- inv_mean_dirichlet_process(y, size.)
+    .alpha_y_cache$y <- y
+    .alpha_y_cache$size <- size.
+    .alpha_y_cache$alpha <- a
+    a
+  }
+
   # residual deviance
   dev.resids <- function(y, mu, wt, size.) {
-    alpha_y <- inv_mean_dirichlet_process(y, size.) #inv_polyseries(y, size., sigma = 0)
+    alpha_y <- alpha_of_y(y, size.)
     alpha_mu <- inv_mean_dirichlet_process(mu, size.) #inv_polyseries(mu, size., sigma = 0)
     2 * (wt * (y * log(alpha_y / alpha_mu) - lgamma(alpha_y + size.) + lgamma(alpha_y) +
                  lgamma(alpha_mu + size.) - lgamma(alpha_mu)))
@@ -291,9 +290,24 @@ quasihubbell <- function(link = "polyseries", sigma = 0) {
   # Valid values for mu
   validmu <- function(mu) all(is.finite(mu)) && all(mu >= 1)
 
+  # See the note in hubbell(): alpha(y) is constant across IRLS iterations.
+  .alpha_y_cache <- new.env(parent = emptyenv())
+  alpha_of_y <- function(y, size.) {
+    if (!is.null(.alpha_y_cache$y) &&
+        identical(.alpha_y_cache$y, y) &&
+        identical(.alpha_y_cache$size, size.)) {
+      return(.alpha_y_cache$alpha)
+    }
+    a <- inv_mean_dirichlet_process(y, size.)
+    .alpha_y_cache$y <- y
+    .alpha_y_cache$size <- size.
+    .alpha_y_cache$alpha <- a
+    a
+  }
+
   # residual deviance
   dev.resids <- function(y, mu, wt, size.) {
-    alpha_y <- inv_mean_dirichlet_process(y, size.)#inv_polyseries(y, size., sigma = 0)
+    alpha_y <- alpha_of_y(y, size.)
     alpha_mu <- inv_mean_dirichlet_process(mu, size.) #inv_polyseries(mu, size., sigma = 0)
     2 * (wt * (y * log(alpha_y / alpha_mu) - lgamma(alpha_y + size.) + lgamma(alpha_y) +
                  lgamma(alpha_mu + size.) - lgamma(alpha_mu)))

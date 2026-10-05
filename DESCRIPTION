@@ -14,7 +14,7 @@ Description: Hubbell regression is a generalized linear model to relate
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Imports: stats, Rcpp, utils
+Imports: stats, Rcpp, utils, methods, Matrix
 LinkingTo: Rcpp, RcppArmadillo
 URL: https://alessandrozito.github.io/HubbellGLM/, https://github.com/alessandrozito/HubbellGLM
 BugReports: https://github.com/alessandrozito/HubbellGLM/issues

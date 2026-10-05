@@ -13,7 +13,10 @@ vcov_shared(fit, similarity = NULL)
 \item{similarity}{An optional \eqn{n \times n} similarity matrix encoding
 dependence between the \eqn{n} observations used to fit \code{fit}.
 The diagonal must be 1 and all off-diagonal entries must be in
-\eqn{[0, 1)}. If \code{NULL} (default), returns \code{vcov(fit)}.}
+\eqn{[0, 1)}. A sparse \code{Matrix} (\code{dgCMatrix} or the symmetric
+\code{dsCMatrix} returned by \code{get_shared_species}) is accepted and
+preferred at large \eqn{n}. If \code{NULL} (default), returns
+\code{vcov(fit)}.}
 }
 \value{
 A \eqn{p \times p} variance-covariance matrix.
