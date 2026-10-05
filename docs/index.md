@@ -1,12 +1,12 @@
 # HubbellGLM
 
 **HubbellGLM** implements Hubbell regression — a generalized linear
-model (GLM) for $\alpha$-diversity. The model treats observed species
+model (GLM) for $`\alpha`$-diversity. The model treats observed species
 richness as a random variable governed by the Dirichlet process
 (i.e. the Ewens sampling formula) and uses standard GLM machinery to
-regress Hubbell’s fundamental biodiversity number $\alpha$ on
+regress Hubbell’s fundamental biodiversity number $`\alpha`$ on
 environmental covariates. A single fitted model yields coefficients with
-standard errors and $p$-values, likelihood-based model selection
+standard errors and $`p`$-values, likelihood-based model selection
 (AIC/BIC), and closed-form predictions of Shannon entropy, Simpson’s
 index, and Hill numbers at any sample size.
 
@@ -15,6 +15,7 @@ index, and Hill numbers at any sample size.
 Install the development version from GitHub:
 
 ``` r
+
 # install.packages("devtools")
 devtools::install_github("alessandrozito/HubbellGLM")
 ```
@@ -22,6 +23,7 @@ devtools::install_github("alessandrozito/HubbellGLM")
 ## Quick start
 
 ``` r
+
 #-- Load the R packages
 library(HubbellGLM)
 library(vegan)
@@ -72,7 +74,7 @@ coeftest(fit, vcov. = vcov_fit)
 |:---|:---|
 | [`HubbellGLM()`](https://alessandrozito.github.io/HubbellGLM/reference/HubbellGLM.md) | Fit a Hubbell regression (main fitting function) |
 | [`hubbell()`](https://alessandrozito.github.io/HubbellGLM/reference/hubbell.md) / [`quasihubbell()`](https://alessandrozito.github.io/HubbellGLM/reference/quasihubbell.md) | GLM family objects |
-| [`estimate_sigma()`](https://alessandrozito.github.io/HubbellGLM/reference/estimate_sigma.md) | Estimate the polynomial link exponent $\sigma$ |
+| [`estimate_sigma()`](https://alessandrozito.github.io/HubbellGLM/reference/estimate_sigma.md) | Estimate the polynomial link exponent $`\sigma`$ |
 | [`predict()`](https://rdrr.io/r/stats/predict.html) | Predict richness at new sites |
 | [`predict_curve()`](https://alessandrozito.github.io/HubbellGLM/reference/predict_curve.md) | Species accumulation curve with standard errors |
 | `vcov_species()` | Jaccard-adjusted sandwich variance–covariance matrix |

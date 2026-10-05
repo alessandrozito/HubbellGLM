@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>HubbellGLM: Covariate-dependent biodiversity via Hubbell regression • HubbellGLM</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.2.1/css/all.min.css" rel="stylesheet">
-<link href="deps/font-awesome-6.2.1/css/v4-shims.min.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="HubbellGLM: Covariate-dependent biodiversity via Hubbell regression">
 <meta name="description" content="Hubbell regression is a generalized linear model for alpha-diversity. It links environmental covariates to Hubbell's fundamental biodiversity number, which can be converted into Shannon, Simpson, and Hill indices.
 ">
@@ -60,7 +60,7 @@
 <p>Install the development version from GitHub:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"alessandrozito/HubbellGLM"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"alessandrozito/HubbellGLM"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
@@ -68,7 +68,7 @@
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#-- Load the R packages</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://alessandrozito.github.io/HubbellGLM/">HubbellGLM</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/vegandevs/vegan" class="external-link">vegan</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://vegandevs.github.io/vegan/" class="external-link">vegan</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">lmtest</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#-- Load the data</span></span>
@@ -104,10 +104,10 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fitQuasi</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#=== Option 2 - Adjust standard errors via shared species (Jaccard similarity)</span></span>
-<span><span class="va">brayDist</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/vegan/man/vegdist.html" class="external-link">vegdist</a></span><span class="op">(</span><span class="va">BCI</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">40</span>, <span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">brayDist</span> <span class="op">&lt;-</span> <span class="fu">vegdist</span><span class="op">(</span><span class="va">BCI</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">40</span>, <span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">Dshared</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">brayDist</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="va">brayDist</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">vcov_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/vcov_shared.html">vcov_shared</a></span><span class="op">(</span><span class="va">fit</span>, similarity <span class="op">=</span> <span class="va">Dshared</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/lmtest/man/coeftest.html" class="external-link">coeftest</a></span><span class="op">(</span><span class="va">fit</span>, vcov. <span class="op">=</span> <span class="va">vcov_fit</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">coeftest</span><span class="op">(</span><span class="va">fit</span>, vcov. <span class="op">=</span> <span class="va">vcov_fit</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="main-functions">Main functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
@@ -117,35 +117,35 @@
 <col width="43%">
 <col width="56%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th align="left">Function</th>
 <th align="left">Description</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td align="left"><code><a href="reference/HubbellGLM.html">HubbellGLM()</a></code></td>
 <td align="left">Fit a Hubbell regression (main fitting function)</td>
 </tr>
-<tr class="even">
+<tr>
 <td align="left">
 <code><a href="reference/hubbell.html">hubbell()</a></code> / <code><a href="reference/quasihubbell.html">quasihubbell()</a></code>
 </td>
 <td align="left">GLM family objects</td>
 </tr>
-<tr class="odd">
+<tr>
 <td align="left"><code><a href="reference/estimate_sigma.html">estimate_sigma()</a></code></td>
 <td align="left">Estimate the polynomial link exponent <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>
 </td>
 </tr>
-<tr class="even">
+<tr>
 <td align="left"><code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code></td>
 <td align="left">Predict richness at new sites</td>
 </tr>
-<tr class="odd">
+<tr>
 <td align="left"><code><a href="reference/predict_curve.html">predict_curve()</a></code></td>
 <td align="left">Species accumulation curve with standard errors</td>
 </tr>
-<tr class="even">
+<tr>
 <td align="left"><code>vcov_species()</code></td>
 <td align="left">Jaccard-adjusted sandwich variance–covariance matrix</td>
 </tr>

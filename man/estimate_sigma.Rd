@@ -12,6 +12,9 @@ estimate_sigma(formula, data, startpoint = 0, verbose = TRUE)
 
 \item{data}{A \code{data.frame} containing the variables in \code{formula}.}
 
+\item{startpoint}{Numeric; starting value for the \code{nlminb} optimisation
+of \code{sigma}. Defaults to 0.}
+
 \item{verbose}{Logical; if \code{TRUE} (default), prints the sigma value
 evaluated at each iteration.}
 }

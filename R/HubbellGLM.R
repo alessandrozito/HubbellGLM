@@ -198,6 +198,8 @@ formula.HubbellGLM <- function(x, ...)
 #' @param formula A formula specifying the model (same syntax as
 #'   \code{\link{HubbellGLM}}).
 #' @param data A \code{data.frame} containing the variables in \code{formula}.
+#' @param startpoint Numeric; starting value for the \code{nlminb} optimisation
+#'   of \code{sigma}. Defaults to 0.
 #' @param verbose Logical; if \code{TRUE} (default), prints the sigma value
 #'   evaluated at each iteration.
 #'
